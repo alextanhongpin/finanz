@@ -13,40 +13,22 @@ from tornado.options import define, options, parse_command_line
 from tornado.web import Application, RequestHandler
 import tornado
 
-from usecase.crud_entry.model import Expense
+from usecase.crud_expense import make_usecase
 
 define('port', default=5000, help='the application port')
 
 HEADER_X_REQUEST_ID = 'X-Request-ID'
 
 
-class MainHandler(RequestHandler):
-    SUPPORTED_METHODS = ['GET', 'POST']
-
-    def initialize(self):
-        pass
-
-    def prepare(self):
-        '''This is initialized before every requests.'''
+# Convert this into a decorator method.
+def request_id(f):
+    def decorate(self, *args, **kwargs):
         request_id = self.request.headers.get(HEADER_X_REQUEST_ID)
         if not request_id:
             self.request.headers[HEADER_X_REQUEST_ID] = str(uuid4())
+        f(self, *args, **kwargs)
 
-    def set_default_headers(self):
-        self.set_header('Content-Type', 'application/json; charset=utf-8')
-
-    def get(self):
-        request_id = self.request.headers.get(HEADER_X_REQUEST_ID)
-        data = {'id': '1', 'amount': 100.0, 'name': 'hello'}
-        exp = Expense(**data)
-        #  exp = Expense(id='1', amount=100.0, name='hello')
-        res = dataclasses.asdict(exp)
-        res['request_id'] = request_id
-        self.write(json.dumps(res))
-
-    def post(self):
-        req = tornado.escape.json_decode(self.request.body)
-        self.write(req)
+    return decorate
 
 
 def sig_handler(server, sig, frame):
@@ -63,16 +45,15 @@ def sig_handler(server, sig, frame):
 
 def main():
     parse_command_line()
-    app = Application([
-        (r"/", MainHandler),
-    ], debug=True)
+    app = Application([make_usecase()], debug=True)
     server = HTTPServer(app)
     server.listen(options.port)
 
     signal.signal(SIGTERM, partial(sig_handler, server))
     signal.signal(SIGINT, partial(sig_handler, server))
 
-    print(f'listening to port *:{options.port}. press ctrl + c to cancel')
+    logging.info('listening to port *:%d. press ctrl + c to cancel',
+                 options.port)
     IOLoop.current().start()
 
 
