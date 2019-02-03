@@ -1,18 +1,24 @@
-import tornado.ioloop
+from functools import partial
 from tornado.options import define, options
-import tornado.web
 import json
-import time
 import logging
 import signal
-from functools import partial
+import time
+import tornado.ioloop
+import tornado.web
+import dataclasses
 
 define('port', default=5000, help='the application port')
+
+from usecase.crud_entry.model import Expense
 
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write(json.dumps({'hello': 'world'}))
+        exp = Expense(id='1', amount=100.0, name='hello')
+
+        res = dataclasses.asdict(exp)
+        self.write(json.dumps(res))
 
     def post(self):
         req = tornado.escape.json_decode(self.request.body)
