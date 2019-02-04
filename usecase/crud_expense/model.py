@@ -16,3 +16,8 @@ class Expense:
 
 
 # How to serialize dataclasses back to json.
+class ExpenseEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
+        return super().default(self, obj)
