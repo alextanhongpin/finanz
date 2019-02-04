@@ -13,3 +13,6 @@ class Expense:
     amount: int
     description: str = field(default='')
     created_at: str = field(default=now())
+
+
+# How to serialize dataclasses back to json.
