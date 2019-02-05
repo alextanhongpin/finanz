@@ -1,1 +1,4 @@
+greenlet==0.4.15
+PyMySQL==0.9.3
+tormysql==0.4.0
 tornado==5.1.1

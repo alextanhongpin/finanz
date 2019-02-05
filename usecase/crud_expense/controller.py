@@ -13,8 +13,9 @@ class Controller(RequestHandler):
     def initialize(self, repo):
         self.repo = repo
 
-    def get(self):
-        expenses = self.repo.list()
+    async def get(self):
+        expenses = await self.repo.get()
+        #  expenses = await self.repo.get()
         res = {'data': expenses}
         self.write(json.dumps(res))
 
